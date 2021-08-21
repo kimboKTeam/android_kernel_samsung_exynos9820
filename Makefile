@@ -1172,7 +1172,7 @@ $(vmlinux-dirs): prepare scripts
 	$(Q)$(MAKE) $(build)=$@
 
 define filechk_kernel.release
-	echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))-NobodyKernel_v1.0"
+	echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))-NobodyKernel-v1.0"
 endef
 
 # Store (new) KERNELRELEASE string in include/config/kernel.release
