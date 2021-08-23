@@ -178,16 +178,6 @@ p->regulator[i0].en,
 p->regulator[i0].name);
 }
 for (i0 = 0; i0 < 1024; i0++) {
-if (p->thermal[i0].time == 0) break;
-printf("log.append({ 'type' : 'thermal', 'time' : %lld.%09lld, 'cpu' : %d, 'temp' : %u, 'cooling_device' : '%p', 'cooling_state' : %u, 'data' : '%p', })\n",
-p->thermal[i0].time/1000000000LL,p->thermal[i0].time%1000000000LL,
-p->thermal[i0].cpu,
-p->thermal[i0].temp,
-p->thermal[i0].cooling_device,
-p->thermal[i0].cooling_state,
-p->thermal[i0].data ? p->thermal[i0].data :(void**)-1);
-}
-for (i0 = 0; i0 < 1024; i0++) {
 if (p->acpm[i0].time == 0) break;
 remove_non_ascii(p->acpm[i0].log, 9);
 printf("log.append({ 'type' : 'acpm', 'time' : %lld.%09lld, 'acpm_time' : %llu, 'data' : %u, 'log' : '%s', })\n",
