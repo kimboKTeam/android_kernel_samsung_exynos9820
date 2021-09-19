@@ -1403,7 +1403,7 @@ static int __init cpufreq_read_cpu_max_cl1(char *cpu_max_cl1)
 }
 __setup("cpu_max_cl1=", cpufreq_read_cpu_max_cl1);
 
-unsigned long arg_cpu_max_cl2 = 3016000;
+unsigned long arg_cpu_max_cl2 = 2912000;
 
 static __init int init_domain(struct exynos_cpufreq_domain *domain,
 					struct device_node *dn)
