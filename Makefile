@@ -375,7 +375,7 @@ HOST_LOADLIBES := $(HOST_LFS_LIBS)
 AS		= $(CROSS_COMPILE)as
 LD		= $(CROSS_COMPILE)ld
 LDGOLD		= $(CROSS_COMPILE)ld.gold
-CC              = /home/mrnobody/nobodydev/toolchain/clang/aosp/linux-x86/clang-r399163b/bin/clang
+CC              = /home/mrnobody/nobodydev/toolchain/clang/linux-x86/clang-r416183b/bin/clang
 CPP		= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
@@ -508,7 +508,7 @@ endif
 
 ifeq ($(cc-name),clang)
 ifneq ($(CROSS_COMPILE),)
-CLANG_TRIPLE	?= /home/mrnobody/nobodydev/toolchain/clang/aosp/linux-x86/clang-r399163b/bin/aarch64-linux-gnu-
+CLANG_TRIPLE	?= /home/mrnobody/nobodydev/toolchain/clang/linux-x86/clang-r416183b/bin/aarch64-linux-gnu-
 CLANG_FLAGS	+= --target=$(notdir $(CLANG_TRIPLE:%-=%))
 GCC_TOOLCHAIN_DIR := $(dir $(shell which $(CROSS_COMPILE)elfedit))
 CLANG_FLAGS	+= --prefix=$(GCC_TOOLCHAIN_DIR)$(notdir $(CROSS_COMPILE))
