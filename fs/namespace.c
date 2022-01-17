@@ -2200,10 +2200,6 @@ SYSCALL_DEFINE2(umount, char __user *, name, int, flags)
 	if (flags & MNT_FORCE && !capable(CAP_SYS_ADMIN))
 		goto dput_and_out;
 
-	/* flush delayed_fput to put mnt_count */
-	if (user_request)
-		flush_delayed_fput_wait();
-
 	retval = do_umount(mnt, flags);
 dput_and_out:
 	/* we mustn't call path_put() as that would clear mnt_expiry_mark */
@@ -2216,12 +2212,6 @@ dput_and_out:
 		goto out;
 
 	if (!retval) {
-		/*
-		 * If the last delayed_fput() is called during do_umount()
-		 * and makes mnt_count zero, we need to guarantee to register
-		 * delayed_mntput by waiting for delayed_fput work again.
-		 */
-		flush_delayed_fput_wait();
 
 		/* flush delayed_mntput_work to put sb->s_active */
 		flush_delayed_mntput_wait();
