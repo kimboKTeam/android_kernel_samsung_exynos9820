@@ -866,20 +866,14 @@ static int find_median_of_16bits(struct dw_mci *host, unsigned int map, bool for
 			orig_bits = orig_bits & (orig_bits >> 8);
 	}
 
-	/*
-	 * If there is no cadiates value, then it needs to return -EIO.
-	 * If there are candiates values and don't find bset clk sample value,
-	 * then use a first candiates clock sample value.
-	 */
-	for (i = 0; i < iter; i++) {
-		__c = ror8(candiates, i);
-		if ((__c & 0x1) == 0x1) {
-			loc = i;
-			goto out;
-		}
+	for (i = 0; i < NUM_OF_MASK; i++) {
+		sel = __find_median_of_16bits(orig_bits, mask[i], optimum[i]);
+		if (-1 != sel)
+			break;
 	}
-out:
-	return loc;
+
+	return sel;
+
 }
 
 static void exynos_dwmci_tuning_drv_st(struct dw_mci *host)
@@ -1132,8 +1126,6 @@ static int dw_mci_exynos_execute_tuning(struct dw_mci_slot *slot, u32 opcode,
 		mci_writel(host, CDTHRCTL, 0 << 16 | 0);
 		dw_mci_exynos_set_sample(host, orig_sample, false);
 		ret = -EIO;
-		dev_warn(&mmc->class_dev,
-			"There is no candiates value about clksmpl!\n");
 	}
 
 	/* Rollback Clock drive strength */
