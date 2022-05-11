@@ -384,6 +384,7 @@ struct wacom_i2c {
 	u32 garage_freq0;
 	u32 garage_freq1;
 #endif
+	bool charging;
 };
 
 struct wacom_i2c *wacom_get_drv_data(void *data);

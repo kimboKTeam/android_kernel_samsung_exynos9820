@@ -975,7 +975,9 @@ int wacom_ble_charge_mode(struct wacom_i2c *wac_i2c, int mode)
 
 int start_epen_ble_charging(struct wacom_i2c *wac_i2c)
 {
-	wacom_ble_charge_mode(wac_i2c, EPEN_BLE_C_RESET);
+	wacom_ble_charge_mode(wac_i2c, EPEN_BLE_C_ENABLE);
+	usleep_range(200000, 200000);
+	wacom_ble_charge_mode(wac_i2c, EPEN_BLE_C_START);
 	usleep_range(200000, 200000);
 	return wacom_ble_charge_mode(wac_i2c, EPEN_BLE_C_KEEP_ON);
 }
@@ -1099,7 +1101,16 @@ static ssize_t epen_ble_charging_mode_store(struct device *dev,
 	}
 
 	mutex_lock(&wac_i2c->ble_charge_mode_lock);
-	wacom_ble_charge_mode(wac_i2c, retval);
+	wac_i2c->charging = !!retval;
+	if (wac_i2c->charging) {
+		wacom_ble_charge_mode(wac_i2c, EPEN_BLE_C_RESET);
+		usleep_range(200000, 200000);
+		wacom_ble_charge_mode(wac_i2c, EPEN_BLE_C_DSPX);
+		usleep_range(200000, 200000);
+		start_epen_ble_charging(wac_i2c);
+		usleep_range(200000, 200000);
+	} else
+		wacom_ble_charge_mode(wac_i2c, EPEN_BLE_C_DIABLE);
 	mutex_unlock(&wac_i2c->ble_charge_mode_lock);
 
 	return count;
@@ -2641,7 +2652,8 @@ int set_wacom_ble_charge_mode(bool mode)
 			wac_i2c->ble_block_flag = true;
 	} else {
 		wac_i2c->ble_block_flag = false;
-		ret = start_epen_ble_charging(wac_i2c);
+		if (wac_i2c->charging)
+			ret = start_epen_ble_charging(wac_i2c);
 	}
 	mutex_unlock(&wac_i2c->ble_charge_mode_lock);
 
