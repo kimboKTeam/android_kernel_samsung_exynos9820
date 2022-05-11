@@ -3024,12 +3024,15 @@ static struct binder_node *binder_get_node_refs_for_txn(
 // 1) Skip first 8(P)/12(Q) bytes (useless data)
 // 2) Make sure that the invalid address issue is not occuring (j=9, j+=2)
 // 3) Java layer uses 2 bytes char. And only the first byte has the data. (p+=2)
+// 4) Parcel::writeInterfaceToken() in frameworks/native/libs/binder/Parcel.cpp
 static void freecess_async_binder_report(struct binder_proc *proc,
-								struct binder_proc *target_proc,
-								struct binder_transaction_data *tr,
-								struct binder_transaction *t)
+						struct binder_proc *target_proc,
+						struct binder_transaction_data *tr,
+						struct binder_transaction *t)
 {
+	char buf_user[INTERFACETOKEN_BUFF_SIZE] = {0};
 	char buf[INTERFACETOKEN_BUFF_SIZE] = {0};
+	char *p = NULL;
 	int i = 0;
 	int j = 0;
 	int skip_bytes = 8;
@@ -3062,9 +3065,8 @@ static void freecess_async_binder_report(struct binder_proc *proc,
 					}
 					if (i == INTERFACETOKEN_BUFF_SIZE) buf[i-1] = '\0';
 				}
-				if (i == INTERFACETOKEN_BUFF_SIZE) buf[i-1] = '\0';
+				binder_report(target_proc->tsk, tr->code, buf, tr->flags & TF_ONE_WAY);
 			}
-			binder_report(target_proc->tsk, tr->code, buf, tr->flags & TF_ONE_WAY);
 		}
 	}
 }
@@ -3215,7 +3217,7 @@ static void binder_transaction(struct binder_proc *proc,
 			else
 				return_error = BR_DEAD_REPLY;
 			mutex_unlock(&context->context_mgr_node_lock);
-			if (target_node && target_proc->pid == proc->pid) {
+			if (target_node && target_proc == proc) {
 				binder_user_error("%d:%d got transaction to context manager from process owning it\n",
 						  proc->pid, thread->pid);
 				return_error = BR_FAILED_REPLY;
@@ -3237,12 +3239,7 @@ static void binder_transaction(struct binder_proc *proc,
 #ifdef CONFIG_SAMSUNG_FREECESS
 		freecess_sync_binder_report(proc, target_proc, tr);
 #endif
-		if (WARN_ON(proc == target_proc)) {
-			return_error = BR_FAILED_REPLY;
-			return_error_param = -EINVAL;
-			return_error_line = __LINE__;
-			goto err_invalid_target_handle;
-		}
+
 		if (security_binder_transaction(proc->cred,
 						target_proc->cred) < 0) {
 			return_error = BR_FAILED_REPLY;
@@ -3799,17 +3796,10 @@ static int binder_thread_write(struct binder_proc *proc,
 				struct binder_node *ctx_mgr_node;
 				mutex_lock(&context->context_mgr_node_lock);
 				ctx_mgr_node = context->binder_context_mgr_node;
-				if (ctx_mgr_node) {
-					if (ctx_mgr_node->proc == proc) {
-						binder_user_error("%d:%d context manager tried to acquire desc 0\n",
-								  proc->pid, thread->pid);
-						mutex_unlock(&context->context_mgr_node_lock);
-						return -EINVAL;
-					}
+				if (ctx_mgr_node)
 					ret = binder_inc_ref_for_node(
 							proc, ctx_mgr_node,
 							strong, NULL, &rdata);
-				}
 				mutex_unlock(&context->context_mgr_node_lock);
 			}
 			if (ret)
@@ -4428,8 +4418,8 @@ retry:
 
 			binder_stat_br(proc, thread, cmd);
 			binder_debug(BINDER_DEBUG_TRANSACTION_COMPLETE,
-				     "%d:%d BR_TRANSACTION_COMPLETE\n",
-				     proc->pid, thread->pid);
+				     "%d:%d(%s:%s) BR_TRANSACTION_COMPLETE\n",
+				     proc->pid, thread->pid, proc->tsk->comm, thread->task->comm);
 			kfree(w);
 			binder_stats_deleted(BINDER_STAT_TRANSACTION_COMPLETE);
 		} break;
