@@ -8,19 +8,14 @@ DTB_DIR=$(pwd)/out/arch/arm64/boot/dts
 mkdir ${DTB_DIR}/exynos
 
 export PLATFORM_VERSION=11
-export ANDROID_MAJOR_VERSION=r
-export SEC_BUILD_CONF_VENDOR_BUILD_OS=12
+export ANDROID_MAJOR_VERSION=t
+export SEC_BUILD_CONF_VENDOR_BUILD_OS=13
 
 make O=out ARCH=arm64 exynos9820-d2s_defconfig
-
-DATE_START=$(date +"%s")
 
 make O=out ARCH=arm64 -j8
 
 $(pwd)/tools/mkdtimg cfg_create $(pwd)/out/dtb.img dt.configs/exynos9820.cfg -d ${DTB_DIR}/exynos
-
-DATE_END=$(date +"%s")
-DIFF=$(($DATE_END - $DATE_START))
 
 IMAGE="out/arch/arm64/boot/Image"
 if [[ -f "$IMAGE" ]]; then
