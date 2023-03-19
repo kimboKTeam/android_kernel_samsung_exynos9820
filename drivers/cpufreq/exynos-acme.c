@@ -993,7 +993,7 @@ __ATTR(freqvar_idlelatency, S_IRUGO | S_IWUSR,
 /*********************************************************************
  *                  INITIALIZE EXYNOS CPUFREQ DRIVER                 *
  *********************************************************************/
-static int cpu_undervolt = 35000;
+static int cpu_undervolt = 10000;
 
 static void print_domain_info(struct exynos_cpufreq_domain *domain)
 {
@@ -1335,7 +1335,7 @@ static int init_dm(struct exynos_cpufreq_domain *domain,
 	return register_exynos_dm_freq_scaler(domain->dm_type, dm_scaler);
 }
 
-static unsigned long arg_cpu_min_cl0 = 145000;
+static unsigned long arg_cpu_min_cl0 = 132000; /* min cpu freq 132MHz */
 
 static int __init cpufreq_read_cpu_min_cl0(char *cpu_min_cl0)
 {
@@ -1352,7 +1352,7 @@ static int __init cpufreq_read_cpu_min_cl0(char *cpu_min_cl0)
 }
 __setup("cpu_min_cl0=", cpufreq_read_cpu_min_cl0);
 
-unsigned long arg_cpu_min_cl1 = 205000;
+unsigned long arg_cpu_min_cl1 = 377000;  /* min cpu freq 377MHz */
 
 static int __init cpufreq_read_cpu_min_cl1(char *cpu_min_cl1)
 {
@@ -1367,9 +1367,29 @@ static int __init cpufreq_read_cpu_min_cl1(char *cpu_min_cl1)
 	printk("cpu_min_cl1=%lu\n", arg_cpu_min_cl1);
 	return ret;
 }
+
 __setup("cpu_min_cl1=", cpufreq_read_cpu_min_cl1);
 
-static unsigned long arg_cpu_max_cl0 = 2016000;
+/*Underclocking prime cores to 350 MHz*/
+unsigned long arg_cpu_min_cl2 = 350000; 
+
+static __init int cpufreq_read_cpu_min_cl2(char *cpu_min_cl2)
+{
+	unsigned long ui_khz;
+	int ret;
+
+	ret = kstrtoul(cpu_min_cl2, 0, &ui_khz);
+	if (ret)
+		return -EINVAL;
+
+	arg_cpu_min_cl2 = ui_khz;
+	printk("cpu_min_cl2=%lu\n", arg_cpu_min_cl2);
+	return ret;
+}
+__setup("cpu_min_cl2=", cpufreq_read_cpu_min_cl2);
+
+
+static unsigned long arg_cpu_max_cl0 = 2106000; /* max cpu freq 2106MHz */
 
 static int __init cpufreq_read_cpu_max_cl0(char *cpu_max_cl0)
 {
@@ -1384,24 +1404,25 @@ static int __init cpufreq_read_cpu_max_cl0(char *cpu_max_cl0)
 	printk("cpu_max_cl0=%lu\n", arg_cpu_max_cl0);
 	return ret;
 }
-__setup("cpu_max_cl0=", cpufreq_read_cpu_max_cl0);
+__setup("cpu_max_cl1=", cpufreq_read_cpu_max_cl1);
 
-unsigned long arg_cpu_max_cl1 = 2600000;
+/*Overclocking perf cores to 2600 MHz*/
+unsigned long arg_cpu_max_cl2 = 2600000; /*max_cpu_freq=2600 MHz*/
 
-static int __init cpufreq_read_cpu_max_cl1(char *cpu_max_cl1)
+static __init int cpufreq_read_cpu_max_c2(char *cpu_max_cl2)
 {
 	unsigned long ui_khz;
 	int ret;
 
-	ret = kstrtoul(cpu_max_cl1, 0, &ui_khz);
+	ret = kstrtoul(cpu_max_cl2, 0, &ui_khz);
 	if (ret)
 		return -EINVAL;
 
-	arg_cpu_max_cl1 = ui_khz;
-	printk("cpu_max_cl1=%lu\n", arg_cpu_max_cl1);
+	arg_cpu_max_cl2 = ui_khz;
+	printk("cpu_max_cl2=%lu\n", arg_cpu_max_cl2);
 	return ret;
 }
-__setup("cpu_max_cl1=", cpufreq_read_cpu_max_cl1);
+__setup("cpu_max_cl2=", cpufreq_read_cpu_max_cl2);
 
 unsigned long arg_cpu_max_cl2 = 3016000;
 
@@ -1436,6 +1457,7 @@ static __init int init_domain(struct exynos_cpufreq_domain *domain,
 		domain->min_freq = arg_cpu_min_cl1;
 	} else if (domain->id == 2) {
 		domain->max_freq = arg_cpu_max_cl2;
+        domain->min_freq = arg_cpu_min_cl2;
 	}
 
 	/* If this domain has boost freq, change max */
