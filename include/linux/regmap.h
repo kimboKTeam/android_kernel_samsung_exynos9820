@@ -120,24 +120,23 @@ struct reg_sequence {
  */
 #define regmap_read_poll_timeout(map, addr, val, cond, sleep_us, timeout_us) \
 ({ \
-	ktime_t __timeout = ktime_add_us(ktime_get(), timeout_us); \
-	int __ret; \
+	ktime_t timeout = ktime_add_us(ktime_get(), timeout_us); \
+	int pollret; \
 	might_sleep_if(sleep_us); \
 	for (;;) { \
-		__ret = regmap_read((map), (addr), &(val)); \
-		if (__ret) \
+		pollret = regmap_read((map), (addr), &(val)); \
+		if (pollret) \
 			break; \
 		if (cond) \
 			break; \
-		if ((timeout_us) && \
-		    ktime_compare(ktime_get(), __timeout) > 0) { \
-			__ret = regmap_read((map), (addr), &(val)); \
+		if (timeout_us && ktime_compare(ktime_get(), timeout) > 0) { \
+			pollret = regmap_read((map), (addr), &(val)); \
 			break; \
 		} \
 		if (sleep_us) \
-			usleep_range(((sleep_us) >> 2) + 1, sleep_us); \
+			usleep_range((sleep_us >> 2) + 1, sleep_us); \
 	} \
-	__ret ?: ((cond) ? 0 : -ETIMEDOUT); \
+	pollret ?: ((cond) ? 0 : -ETIMEDOUT); \
 })
 
 #ifdef CONFIG_REGMAP
